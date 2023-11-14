@@ -73,3 +73,10 @@ bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## Docker
+
+```
+docker build -t dalle-game .
+docker run -p 3000:3000 dalle-game
+```
