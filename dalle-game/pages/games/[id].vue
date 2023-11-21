@@ -1,7 +1,7 @@
 <template>
   GameID : {{ id }} : 
   <UButton icon="i-heroicons-clipboard-document" color="gray" @click="copyToClipboard">Game ROOM URLをコピー</UButton>
-  <UButton @click="result">結果を表示</UButton>
+  <UButton @click="result" :disabled="isResultEmpty">結果を表示</UButton>
   <h2>お題</h2>
   <div>
     画像URL：
@@ -34,6 +34,7 @@ const id = route.params.id as string;
 const imageUrl = ref<string>('');
 const titleImg = ref<string>('');
 const isInputEmpty = ref<boolean>(false);
+const isResultEmpty = ref<boolean>(true);
 
 const prompt = ref<string>('');
 const genImage = ref<string>('');
