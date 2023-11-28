@@ -6,8 +6,8 @@ const config = useRuntimeConfig();
 // 比較対象の画像
 const url1 = 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fbs8z1i%2FbtroWDmAcWU%2F180Dv1tWj54jk0nWpL6gG1%2Fimg.jpg';
 // AI Vision
-const endpoint = config.public.apiBase; // AI Vision Endpoint URL
-const key = config.apiSecret; // AI Vision API Key
+const endpoint = config.aiVisionEndpoint; // AI Vision Endpoint URL
+const key = config.aiVisionApiKey; // AI Vision API Key
 const apiUrl = `${endpoint}computervision/retrieval:vectorizeImage?api-version=2023-02-01-preview&modelVersion=latest`;
 
 export default defineEventHandler(async (event) => {
@@ -92,18 +92,3 @@ function getCosineSimilarity(vector1: number[], vector2: number[]): number {
     const magnitude2 = Math.sqrt(vector2.reduce((sum, x) => sum + x * x, 0));
     return dotProduct / (magnitude1 * magnitude2);
 }
-
-// // 類似度を計算する関数S
-// function getCosineSimilarity(vector1: number[], vector2: number[]): number {
-//     let dotProduct = 0;
-//     const length = Math.min(vector1.length, vector2.length);
-//     for (let i = 0; i < length; i++) {
-//       dotProduct += vector1[i] * vector2[i];
-//     }
-    
-//     const magnitude1 = Math.sqrt(vector1.reduce((sum, x) => sum + x * x, 0));
-//     const magnitude2 = Math.sqrt(vector2.reduce((sum, x) => sum + x * x, 0));
-  
-//     return dotProduct / (magnitude1 * magnitude2);
-//   }
-  
