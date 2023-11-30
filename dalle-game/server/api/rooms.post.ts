@@ -1,6 +1,7 @@
 import { defineEventHandler } from 'h3';
 import { v6 as uuidv6 } from 'uuid-with-v6';
 import { MongoClient } from 'mongodb';
+import { Room } from '~/types/room';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -8,16 +9,6 @@ const dbName = "myDatabase";
 
 // MongoDB クライアントを初期化
 const client = new MongoClient(uri);
-
-// Room の型情報
-interface Room {
-    roomId: string;
-    createDateTime: Date;
-    imageUrl?:string;
-    titleImg?:string;
-    titleImageVector?:number[];
-    roomClosed:boolean;
-}
 
 // POST /api/rooms に対するハンドラー
 export default defineEventHandler(async (event) => {
@@ -36,14 +27,15 @@ export default defineEventHandler(async (event) => {
         const collection = db.collection('rooms');
 
         // Insert the new room into the 'rooms' collection
-        const room: Room = { 
+        const room:Room = { 
             roomId: roomId,
             createDateTime: new Date(),
-            roomClosed: false
+            titleFixed: false,
+            roomClosed: false,
          };
         await collection.insertOne(room);
 
-        return { roomId }
+        return room;
 
     } finally {
         // 接続を閉じる
