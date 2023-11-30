@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
       const base64Image = resizedImage.toString('base64');
 
       return {
-        image: `data:image/png;base64,${base64Image}`
+        image: base64Image
       };
     }catch(error){
       // Properly log the error for debugging purposes
