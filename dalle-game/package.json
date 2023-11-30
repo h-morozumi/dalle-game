@@ -15,9 +15,10 @@
     "nuxt": "^3.7.4"
   },
   "dependencies": {
+    "microsoft-cognitiveservices-speech-sdk": "^1.33.1",
     "mongodb": "^6.3.0",
     "node-fetch": "^3.3.2",
-    "sharp": "^0.32.6",
+    "sharp": "^0.33.0",
     "uuid-with-v6": "^2.0.0"
   }
 }
