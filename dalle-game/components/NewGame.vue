@@ -15,7 +15,7 @@ const createGame = async () => {
 }
 
 interface Room {
-  roomId: String;
+    roomId: string;
 }
 </script>
 
