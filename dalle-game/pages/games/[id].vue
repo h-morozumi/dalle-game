@@ -1,5 +1,5 @@
 <template>
-  <!-- isGameNotFoundがtrueの場合にエラーメッセージを表示 -->
+  <!-- ゲームが存在しない場合にエラーメッセージを表示 -->
   <div v-if="isGameNotFound">
     <div class="text-red-600 text-xl text-center mt6">エラー: ゲームが見つかりませんでした。</div>
   </div>
@@ -7,42 +7,73 @@
     <UCard>
       <template #header>
         <Placeholder class="h-8" />
-        <div>
-          GameID : {{ id }}：<UButton icon="i-heroicons-clipboard-document" color="gray" @click="copyToClipboard">Game ROOM URLをコピー</UButton>
+        <div class="border-inherit">
+          <div class="text-right"><UButton icon="i-heroicons-clipboard-document" color="gray" @click="copyToClipboard">Game URLをコピー</UButton></div>
+          <div class="text-2xl text-center">ゲームルーム</div>
+          <div class="text-center">ゲームルームのURLを共有して、友達を招待しよう！</div>
         </div>
       </template>
-
-        <div>
-          <UInput v-model="imageUrl" />
-          <UButton @click="createTitle" :disabled="titleFixed">取得</UButton>
-          <div class="text-red-600 text-xl text-center mt6">{{ imageGetError }}</div>
+      <div class="border-inherit">
+        <div class="grid grid-cols-9">
+          <div class="col-span-8">
+            <UInput :disabled="titleFixed" v-model="imageUrl" />
+            <div class="text-red-600 text-center mt6">{{ imageGetError }}</div>
+          </div>
+          <div class="col-span-1 text-center">
+            <UButton class="mx-2" @click="createTitle" :disabled="titleFixed || imageUrl ==='' || block">取得</UButton>
+          </div>
+          <div class="col-span-full text-center">
+            <UButton class="m-2" @click="fixTitle" :disabled="titleFixed || roomClosed || titleImg ==='' || block">お題を確定</UButton>
+            <UButton class="m-2" @click="finishGame" :disabled="!titleFixed || roomClosed || block" >ゲーム終了</UButton>
+            <UButton class="m-2" @click="result" :disabled="!roomClosed || block">結果を表示</UButton>
+          </div>
         </div>
-        <div v-if="titleImgBase64 !== ''" class="text-center">
-          <img :src="titleImgBase64" width="256" height="256" />
+      </div>
+      <div class="bg-slate-20 my-3">
+        <div class="grid grid-cols-3 min-hight-200">
+          <div class="col-span-1">
+            <div class="text-center font-medium">お題の画像</div>
+            <div v-if="titleImg !== ''">
+              <img class="m-auto" :src="'data:image/png;base64,'+ titleImg" />
+            </div>
+            <div v-else class="text-center">
+              <img class="m-auto opacity-25" src="/noimage.png" width="256" height="256" />
+            </div>
+          </div>
+          <div class="col-span-1">
+            <div class="text-center">
+              <div class="text-center font-medium">生成された画像</div>
+              <div v-if="genImage !== ''">
+                <img class="m-auto" :src="genImage" />
+              </div>
+              <div v-else>
+                <img class="m-auto opacity-25" src="/noimage.png" width="256" height="256" />
+              </div>
+            </div>
+          </div>
+          <div class="col-span-1">
+            <div class="text-center font-medium">プロンプト</div>
+            <div>
+              <UTextarea autoresize :rows="12" v-model="prompt" />
+            </div>
+          </div>
         </div>
-        <div v-else class="text-center">
-          <img src="/noimage.png" width="256" height="256" />
+        <div class="grid grid-cols-3 min-hight-200">
+          <div class="col-span-1"></div>
+          <div class="col-span-1 text-center">
+            <UInput v-model="nickname" placeholder="ニックネーム" />
+            <UButton class="m-2" @click="shareImage" :disabled="roomClosed || !titleFixed || block">画像を共有</UButton>
+          </div>
+          <div class="col-span-1">
+            <div class="text-center">
+              <UButton class="m-2" @click="createImage" :disabled="roomClosed || !titleFixed || block">画像を生成</UButton>
+              <UButton class="m-2" @click="clear" :disabled="roomClosed || !titleFixed || block">クリア</UButton>
+            </div>
+          </div>
         </div>
-        <div class="text-center">
-          <UButton @click="fixTitle" :disabled="titleFixed">お題を確定</UButton>
-        </div>
-
+      </div>
     </UCard>
-
-    <UButton @click="result" :disabled="!roomClosed">結果を表示</UButton>
- 
-    <div>
-      <UTextarea v-model="prompt" />
-      <UButton @click="createImage">画像を生成</UButton>
-      <UButton @click="clear">クリア</UButton>
-    </div>
-    <div>
-      <img :src="genImage" />
-      ニックネーム：<UInput v-model="nickname" />
-      <UButton @click="shareImage">画像を共有</UButton>
-    </div>
   </div>
-
 </template>
   
 <script lang="ts" setup>
@@ -50,22 +81,22 @@ import { useRoute } from 'vue-router';
 import { ref, computed, onMounted } from 'vue';
 
 const route = useRoute();
-
 const id = route.params.id as string;
 
-const imageUrl = ref<string>('');
-const titleImg = ref<string>('');
-const titleImgBase64 = ref<string>('');
-const titleFixed = ref<boolean>(false);
-const roomClosed = ref<boolean>(false);
+// Game設定
+const titleFixed = ref<boolean>(false); // お題が確定したかどうか
+const roomClosed = ref<boolean>(false); // ゲームが終了したかどうか
+const imageUrl = ref<string>(''); // お題のURL
+const titleImg = ref<string>(''); // お題の画像(バイナリ)
+// const titleImgBase64 = ref<string>(''); // お題の画像のBase64データエンコード
+const imageGetError = ref<string>(''); // お題の画像の取得エラー
+const isGameNotFound = ref<boolean>(false); // ゲームが見つからなかったかどうか
 
-const prompt = ref<string>('');
-const genImage = ref<string>('');
-const nickname = ref<string>('');
-
-const isGameNotFound = ref<boolean>(false);
-
-const imageGetError = ref<string>('');
+// Gameプレイ
+const prompt = ref<string>(''); // プロンプト
+const genImage = ref<string>(''); // 生成された画像
+const nickname = ref<string>(''); // ニックネーム
+const block = ref<boolean>(false); // ブロック
 
 // 現在のページの完全なURLを取得
 const currentUrl = computed(() => {
@@ -82,14 +113,13 @@ onMounted(async () => {
     return;
   }
   const room = data.value as import('~/types/room').Room;
-  imageUrl.value = room.titleUrl;
-  titleImg.value = room.titleImage;
-  titleImgBase64.value = room.titleImage? `data:image/png;base64,${room.titleImage}`:'';
+  imageUrl.value = room.titleUrl || '';
+  titleImg.value = room.titleImage || '';
   titleFixed.value = room.titleFixed;
   roomClosed.value = room.roomClosed;
 });
 
-// クリップボードに値をコピーする
+// クリップボードにURLをコピーする
 const copyToClipboard = async () => {
   if (navigator.clipboard) {
     // Clipboard APIを使用してテキストをクリップボードにコピー
@@ -106,6 +136,7 @@ const copyToClipboard = async () => {
 const createTitle = async () => {
   // 画像URLが空の場合は何もしない
   if(!imageUrl.value) return;
+  block.value = true;
 
   //画像を取得する
   const { data, error } = await useFetch(`/api/images?url=${encodeURIComponent(imageUrl.value)}`, {
@@ -114,17 +145,20 @@ const createTitle = async () => {
   if(error.value) {
     console.error(error.value);
     imageGetError.value = '画像の取得に失敗しました。';
+    block.value = false;
     return;
   }
   const image = data.value;
-  titleImg.value = image?.image;
-  titleImgBase64.value = `data:image/png;base64,${image?.image}`;
+  titleImg.value = image?.image ||'';
   imageGetError.value = '';
+  block.value = false;
 }
 
+// お題の確定
 const fixTitle = async () => {
   // 画像URLが空の場合は何もしない
   if(!imageUrl.value || !titleImg.value) return;
+  block.value = true;
   
   const { data, error } = await useFetch(`/api/games/title`, {
     method: 'POST',
@@ -136,10 +170,32 @@ const fixTitle = async () => {
   });
   if(error.value) {
     console.error(error.value);
+    block.value = false;
     return;
   }
   titleFixed.value = true;
+  block.value = false;
 }
+
+// ゲームを終了
+const finishGame = async () => {
+  block.value = true;
+  
+  const { data, error } = await useFetch(`/api/games/close`, {
+    method: 'POST',
+    body: JSON.stringify({
+      roomId: id,
+    }),
+  });
+  if(error.value) {
+    console.error(error.value);
+    block.value = false;
+    return;
+  }
+  roomClosed.value = true;
+  block.value = false;
+}
+
 
 const createImage = async () => {
   console.log(prompt.value);

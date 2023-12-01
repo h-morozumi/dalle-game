@@ -1,6 +1,5 @@
 import { defineEventHandler,readBody } from 'h3';
 import { MongoClient } from 'mongodb';
-import { imageToVector } from '~/utils/aiVisionUtils';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -14,14 +13,11 @@ export default defineEventHandler(async (event) => {
         // リクエストボディを取得
         const body = await readBody(event);
         // ボディからデータを取り出す
-        const { roomId, titleUrl, titleImage } = body;
+        const { roomId} = body;
 
-        if(!roomId || !titleUrl || !titleImage){
+        if(!roomId){
             throw createError({ statusCode: 400, statusMessage: 'Parameter Error' });
         }
-
-        // 画像データをVectorに変換
-        const titleImageVector = await imageToVector(titleImage);
 
         // MongoDB に接続
         await client.connect();
@@ -34,10 +30,7 @@ export default defineEventHandler(async (event) => {
         const result = await collection.updateOne(
             { roomId: roomId }, 
             { $set: { 
-                titleUrl: titleUrl, 
-                titleImage: titleImage, 
-                titleImageVector: titleImageVector, 
-                titleFixed: true 
+                roomClosed: true 
             }}
         );
 
