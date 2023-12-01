@@ -1,6 +1,7 @@
 import { defineEventHandler,readBody } from 'h3';
 import { MongoClient } from 'mongodb';
 import { Room } from '~/types/room';
+import { imageToVector } from '~/utils/aiVisionUtils';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -14,11 +15,18 @@ export default defineEventHandler(async (event) => {
         // リクエストボディを取得
         const body = await readBody(event);
         // ボディからデータを取り出す
-        const { roomId, titleUrl,titleImage } = body;
+        const { roomId, titleUrl, titleImage } = body;
+
+        if(!roomId || !titleUrl || !titleImage){
+            throw createError({ statusCode: 400, statusMessage: 'Parameter Error' });
+        }
+
+        // 画像データをVectorに変換
+        const titleImageVector = await imageToVector(titleImage);
+        console.log(titleImageVector);
 
         // MongoDB に接続
         await client.connect();
-        console.log("Connected successfully to server");
 
         // データベースを取得
         const db = client.db(dbName);
@@ -30,17 +38,18 @@ export default defineEventHandler(async (event) => {
             { $set: { 
                 titleUrl: titleUrl, 
                 titleImage: titleImage, 
-                titleImageVector: '', 
+                titleImageVector: titleImageVector, 
                 titleFixed: true 
             }}
         );
 
         if(result.matchedCount === 0){
-            throw new Error('Room not found.');
+            throw createError({ statusCode: 400, statusMessage: 'Room Not Found' });
         }
 
         // Get the updated room
         const room = await collection.findOne({ roomId: roomId });
+        console.log(room);
         return room;
 
     } finally {

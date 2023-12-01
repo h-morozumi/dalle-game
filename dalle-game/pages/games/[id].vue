@@ -17,8 +17,11 @@
           <UButton @click="createTitle" :disabled="titleFixed">取得</UButton>
           <div class="text-red-600 text-xl text-center mt6">{{ imageGetError }}</div>
         </div>
-        <div class="text-center">
+        <div v-if="titleImgBase64 !== ''" class="text-center">
           <img :src="titleImgBase64" width="256" height="256" />
+        </div>
+        <div v-else class="text-center">
+          <img src="/noimage.png" width="256" height="256" />
         </div>
         <div class="text-center">
           <UButton @click="fixTitle" :disabled="titleFixed">お題を確定</UButton>
@@ -120,6 +123,9 @@ const createTitle = async () => {
 }
 
 const fixTitle = async () => {
+  // 画像URLが空の場合は何もしない
+  if(!imageUrl.value || !titleImg.value) return;
+  
   const { data, error } = await useFetch(`/api/games/title`, {
     method: 'POST',
     body: JSON.stringify({
