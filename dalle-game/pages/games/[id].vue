@@ -66,7 +66,7 @@
           </div>
           <div class="col-span-1">
             <div class="text-center">
-              <UButton class="m-2" @click="createImage" :disabled="roomClosed || !titleFixed || block">画像を生成</UButton>
+              <UButton class="m-2" @click="createImage" :disabled="roomClosed || !titleFixed || prompt === '' || block">画像を生成</UButton>
               <UButton class="m-2" @click="clear" :disabled="roomClosed || !titleFixed || block">クリア</UButton>
             </div>
           </div>
@@ -196,24 +196,46 @@ const finishGame = async () => {
   block.value = false;
 }
 
-
+//画像を生成
 const createImage = async () => {
-  console.log(prompt.value);
-  
+  // プロンプトが空の場合は何もしない
+  if(!prompt.value) return;
+  block.value = true;
+  // /api/dalle/v2/gen にPOSTリクエストを送信
+  const { data, error } = await useFetch(`/api/dalle/v2/gen`, {
+    method: 'POST',
+    body: JSON.stringify({
+      prompt: prompt.value,
+    }),
+  });
+  if(error.value) {
+    console.error(error.value);
+    block.value = false;
+    return;
+  }
+  const genUrl = data.value;
+  if(!genUrl) {
+    console.error('genUrl is empty');
+    block.value = false;
+    return;
+  }
+  genImage.value = genUrl;
+  block.value = false;
 }
 
-const shareImage = async () => {
-  console.log(nickname.value);
-  console.log(genImage.value);
-  console.log(prompt.value);
-  genImage.value = '';
-  prompt.value = '';
-}
-
+// 生成画像をクリア
 const clear = async () => {
   genImage.value = '';
   prompt.value = '';
 }
+
+// 生成画像を共有
+const shareImage = async () => {
+  genImage.value = '';
+  prompt.value = '';
+}
+
+
 
 const result = async () => {
   navigateTo('/result/' + id);

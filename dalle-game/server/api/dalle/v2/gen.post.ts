@@ -1,3 +1,5 @@
+import {GenerateImagesResponse,OperationResponse,OperationResult,OperationResultData} from '~/types/dalle2'
+
 import { defineEventHandler, createError, getQuery } from 'h3';
 import { useRuntimeConfig } from '#imports'
 import fetch from 'node-fetch';
@@ -9,38 +11,18 @@ const key = config.dalle2ApiKey; // Azure OpenAI DALL-E v2 API Key
 const api_version = '2023-06-01-preview';
 const apiUrl = `${endpoint}openai/images/generations:submit?api-version=${api_version}`;
 
-interface GenerateImagesResponse {
-  id: string;
-  status: string;
-}
-
-interface OperationResponse {
-  created: number;
-  expires: number;
-  id: string;
-  result: OperationResult;
-  status: string;
-}
-
-interface OperationResult {
-  created: number;
-  data: OperationResultData[];
-}
-
-interface OperationResultData {
-  url: string;
-}
-
 export default defineEventHandler(async (event) => {
     try {
+        // リクエストボディを取得
+        const body = await readBody(event);
+        // ボディからデータを取り出す
+        const { prompt } = body;
 
-        const query = await getQuery(event);
-        const text = query.text as string | undefined;
-        if (!text) {
-          throw createError({ statusCode: 400, statusMessage: 'No text provided' });
+        if(!prompt){
+            throw createError({ statusCode: 400, statusMessage: 'Parameter Error' });
         }
 
-        const response = await fetch(apiUrl, getFetchRequestOptions('POST', { prompt:text, size: "1024x1024", n: 1 }));
+        const response = await fetch(apiUrl, getFetchRequestOptions('POST', { prompt:prompt, size: "1024x1024", n: 1 }));
 
         if (!response.ok) {
             throw createError({ statusCode: response.status, statusMessage: response.statusText });
@@ -60,7 +42,9 @@ export default defineEventHandler(async (event) => {
         const operationResponse = await fetch(operationLocation, getFetchRequestOptions('GET'));
         const operationResult = await operationResponse.json() as OperationResponse;
     
-        return operationResult.result.data[0]?.url;
+        const ret = operationResult.result.data[0]?.url;
+        console.log(ret);
+        return ret;
     } catch (error) {
         console.error(error);
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error' });
@@ -81,7 +65,7 @@ function getFetchRequestOptions(method: string, body?: Record<string, any>) {
 async function waitForOperationToSucceed(operationLocation: string) {
   let status = '';
   while (status !== 'succeeded') {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const operationResponse = await fetch(operationLocation, getFetchRequestOptions('GET'));
       if (!operationResponse.ok) {
           throw createError({ statusCode: operationResponse.status, statusMessage: operationResponse.statusText });
