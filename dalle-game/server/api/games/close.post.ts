@@ -1,5 +1,6 @@
 import { defineEventHandler,readBody } from 'h3';
 import { MongoClient } from 'mongodb';
+import type { Room } from '~/types/room';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -13,7 +14,7 @@ export default defineEventHandler(async (event) => {
         // リクエストボディを取得
         const body = await readBody(event);
         // ボディからデータを取り出す
-        const { roomId} = body;
+        const { roomId } = body;
 
         if(!roomId){
             throw createError({ statusCode: 400, statusMessage: 'Parameter Error' });
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
         }
 
         // Get the updated room
-        const room = await collection.findOne({ roomId: roomId });
+        const room = await collection.findOne<Room>({ roomId: roomId });
 
         return room;
 

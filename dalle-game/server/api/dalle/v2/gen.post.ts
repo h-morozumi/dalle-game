@@ -1,8 +1,7 @@
-import {GenerateImagesResponse,OperationResponse,OperationResult,OperationResultData} from '~/types/dalle2'
-
-import { defineEventHandler, createError, getQuery } from 'h3';
+import { defineEventHandler, createError } from 'h3';
 import { useRuntimeConfig } from '#imports'
 import fetch from 'node-fetch';
+import type {GenerateImagesResponse,OperationResponse,} from '~/types/dalle2'
 
 const config = useRuntimeConfig();
 // Azure OpenAI DALL-E v2

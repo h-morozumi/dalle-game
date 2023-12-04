@@ -1,6 +1,6 @@
-import { defineEventHandler, sendError, createError } from 'h3'
+import { defineEventHandler, createError } from 'h3'
 import { MongoClient } from 'mongodb';
-import { Room } from '~/types/room';
+import type { Room } from '~/types/room';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -26,8 +26,8 @@ export default defineEventHandler(async (event) => {
     return room;
 })
 
-// Roomの存在をチェックする関数 (仮の実装)
-async function checkIfRoomExists(gameId: string): Promise<Room> {
+// Roomの存在をチェックする関数
+async function checkIfRoomExists(roomId: string): Promise<Room> {
     try{
         // MongoDB に接続
         await client.connect();
@@ -38,7 +38,7 @@ async function checkIfRoomExists(gameId: string): Promise<Room> {
 
         // DBからgameIdをキーにしてRoomを取得
         const collection = db.collection('rooms');
-        const room = await collection.findOne({ roomId: gameId });
+        const room = await collection.findOne<Room>({ roomId: roomId });
         return room;
     }catch(err){
         console.error(err);

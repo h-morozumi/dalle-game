@@ -1,7 +1,7 @@
 import { defineEventHandler, createError, getQuery } from 'h3';
 import { useRuntimeConfig } from '#imports'
 import fetch from 'node-fetch';
-import { GenerateImagesResponse, GenerateImagesResponseData} from '~/types/dalle3'
+import type { GenerateImagesResponse } from '~/types/dalle3'
 
 const config = useRuntimeConfig();
 
@@ -9,8 +9,6 @@ const endpoint = config.dalle3Endpoint ; // Azure OpenAI DALL-E v3 Endpoint URL
 const key = config.dalle3ApiKey; // Azure OpenAI DALL-E v3 API Key
 const api_version = '2023-12-01-preview';
 const apiUrl = `${endpoint}openai/deployments/Dalle3/images/generations?api-version=${api_version}`;
-
-
 
 export default defineEventHandler(async (event) => {
     try {

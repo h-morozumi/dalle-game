@@ -81,6 +81,7 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
 import { ref, computed, onMounted } from 'vue';
+import type { Room } from '~/types/room';
 
 const route = useRoute();
 const id = route.params.id as string;
@@ -90,7 +91,6 @@ const titleFixed = ref<boolean>(false); // お題が確定したかどうか
 const roomClosed = ref<boolean>(false); // ゲームが終了したかどうか
 const imageUrl = ref<string>(''); // お題のURL
 const titleImg = ref<string>(''); // お題の画像(バイナリ)
-// const titleImgBase64 = ref<string>(''); // お題の画像のBase64データエンコード
 const imageGetError = ref<string>(''); // お題の画像の取得エラー
 const isGameNotFound = ref<boolean>(false); // ゲームが見つからなかったかどうか
 
@@ -99,14 +99,11 @@ const prompt = ref<string>(''); // プロンプト
 const genImage = ref<string>(''); // 生成された画像
 const nickname = ref<string>(''); // ニックネーム
 const block = ref<boolean>(false); // ブロック
-const options = [{
-    value: 'v2',
-    label: 'DALL-E v2'
-  }, {
-    value: 'v3',
-    label: 'DALL-E v3'
-  }]
-const selected = ref('v2')
+const options = [
+  {value: 'v2', label: 'DALL-E v2'}, {value: 'v3', label: 'DALL-E v3'}
+]; // DALL-Eのバージョン選択肢
+const selected = ref('v2'); // 選択されたDALL-Eのバージョン
+
 // 現在のページの完全なURLを取得
 const currentUrl = computed(() => {
   return window.location.origin + route.fullPath;
@@ -121,7 +118,7 @@ onMounted(async () => {
     isGameNotFound.value = true;
     return;
   }
-  const room = data.value as import('~/types/room').Room;
+  const room = data.value as Room;
   imageUrl.value = room.titleUrl || '';
   titleImg.value = room.titleImage || '';
   titleFixed.value = room.titleFixed;
@@ -210,7 +207,7 @@ const createImage = async () => {
   // プロンプトが空の場合は何もしない
   if(!prompt.value) return;
   block.value = true;
-  // /api/dalle/v2/gen にPOSTリクエストを送信
+  // DALL-E にPOSTリクエストを送信
   const { data, error } = await useFetch(`/api/dalle/${selected.value}/gen`, {
     method: 'POST',
     body: JSON.stringify({
@@ -263,6 +260,7 @@ const shareImage = async () => {
   block.value = false;
 }
 
+// 最新の情報で更新
 const refresh = async () => {
   // Gameの内容を取得
   const { data, error } = await useFetch(`/api/games/${id}`);
@@ -271,7 +269,7 @@ const refresh = async () => {
     isGameNotFound.value = true;
     return;
   }
-  const room = data.value as import('~/types/room').Room;
+  const room = data.value as Room;
   imageUrl.value = room.titleUrl || '';
   titleImg.value = room.titleImage || '';
   titleFixed.value = room.titleFixed;

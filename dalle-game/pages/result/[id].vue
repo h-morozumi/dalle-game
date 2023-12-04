@@ -47,13 +47,14 @@
 </template>
   
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import type { Room } from '~/types/room';
 
 const route = useRoute();
 const id = route.params.id;
 
-const titleImage = ref<string>(); // タイトル画像
+const titleImage = ref<string>(''); // タイトル画像
 
 const isGameNotFound = ref<boolean>(false); // ゲームが見つからなかったかどうか
 const items = ref<any[]>([]); // 結果一覧
@@ -67,8 +68,9 @@ onMounted(async () => {
     isGameNotFound.value = true;
     return;
   }
-  const room = data.value as import('~/types/room').Room;
-  titleImage.value = room.titleImage;
+  const room = data.value as Room;
+  titleImage.value = room.titleImage || '';
+
   // ゲーム結果を取得
   const { data: resultData, error: resultError } = await useFetch(`/api/result/${id}`);
   if (resultError.value) {

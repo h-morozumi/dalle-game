@@ -1,7 +1,7 @@
 import { defineEventHandler } from 'h3';
 import { v6 as uuidv6 } from 'uuid-with-v6';
 import { MongoClient } from 'mongodb';
-import { Room } from '~/types/room';
+import type { Room } from '~/types/room';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
         const collection = db.collection('rooms');
 
         // Insert the new room into the 'rooms' collection
-        const room:Room = { 
+        const room: Room = { 
             roomId: roomId,
             createDateTime: new Date(),
             titleFixed: false,

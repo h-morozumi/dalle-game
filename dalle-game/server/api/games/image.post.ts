@@ -1,6 +1,8 @@
 import { defineEventHandler,readBody } from 'h3';
 import { MongoClient } from 'mongodb';
 import { imageToVector, getCosineSimilarity } from '~/utils/aiVisionUtils';
+import type { Room } from '~/types/room';
+import type { Game } from '~/types/game';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -43,7 +45,7 @@ export default defineEventHandler(async (event) => {
 
         // roomコレクションからroomIDで画像のベクター情報を取得
         const roomCollection = db.collection('rooms');
-        const room = await roomCollection.findOne({ roomId: roomId }) ;
+        const room = await roomCollection.findOne<Room>({ roomId: roomId }) ;
         if(!room){
             throw createError({ statusCode: 404, statusMessage: 'Room Not Found' });
         }
@@ -56,7 +58,7 @@ export default defineEventHandler(async (event) => {
         const collection = db.collection('games');
 
         // Insert the new room into the 'rooms' collection
-        const game = { 
+        const game: Game = { 
             roomId: roomId,
             createDateTime: new Date(),
             nickname: nickname,
@@ -64,7 +66,7 @@ export default defineEventHandler(async (event) => {
             image: base64Image,
             imageVector: imageVector,
             similarity: cosineSimilarity,
-            dalle: dalle
+            dalle: dalle,
          };
          const result = await collection.insertOne(game);
          console.log(`New game created with the following id: ${result.insertedId}`);

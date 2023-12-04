@@ -1,6 +1,6 @@
 import { useRuntimeConfig } from '#imports'
 import fetch from 'node-fetch';
-import { VectorizeImageResponse } from '~/types/vectorizeImage';
+import type { VectorizeImageResponse } from '~/types/vectorizeImage';
 
 const config = useRuntimeConfig();
 // AI Vision

@@ -1,6 +1,7 @@
 import { defineEventHandler,readBody } from 'h3';
 import { MongoClient } from 'mongodb';
 import { imageToVector } from '~/utils/aiVisionUtils';
+import type { Room } from '~/types/room';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -38,7 +39,7 @@ export default defineEventHandler(async (event) => {
                 titleImage: titleImage, 
                 titleImageVector: titleImageVector, 
                 titleFixed: true 
-            }}
+            } as Room}
         );
 
         if(result.matchedCount === 0){
@@ -46,7 +47,7 @@ export default defineEventHandler(async (event) => {
         }
 
         // Get the updated room
-        const room = await collection.findOne({ roomId: roomId });
+        const room = await collection.findOne<Room>({ roomId: roomId });
 
         return room;
 

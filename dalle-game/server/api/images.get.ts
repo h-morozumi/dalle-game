@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
     try{
       const query = await getQuery(event);
-      const url = query.url as string | undefined;
+      const url = query.url as string;
       if (!url) {
         throw createError({ statusCode: 400, statusMessage: 'No URL provided' });
       }

@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Room存在チェック
-    const games = await checkIfRoomExists(gameId);
+    const games = await getGames(gameId);
     if (!games) {
         throw createError({ statusCode: 400, statusMessage: 'Game Not Found' });
     }
@@ -26,8 +26,8 @@ export default defineEventHandler(async (event) => {
     return games;
 })
 
-// Roomの存在をチェックする関数 (仮の実装)
-async function checkIfRoomExists(gameId: string): Promise<Game[]> {
+// Gameを取得
+async function getGames(gameId: string): Promise<Game[]> {
     try{
         // MongoDB に接続
         await client.connect();
@@ -38,7 +38,7 @@ async function checkIfRoomExists(gameId: string): Promise<Game[]> {
 
         // DBからgameIdをキーにしてRoomを取得
         const collection = db.collection('games');
-        const games = await collection.find({ roomId: gameId }).sort({ similarity: -1 }).limit(10).toArray();
+        const games = await collection.find<Game>({ roomId: gameId }).sort({ similarity: -1 }).limit(10).toArray();
         return games;
     }catch(err){
         console.error(err);
