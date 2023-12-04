@@ -1,6 +1,7 @@
 import { defineEventHandler, createError, getQuery } from 'h3';
 import { useRuntimeConfig } from '#imports'
 import fetch from 'node-fetch';
+import { GenerateImagesResponse, GenerateImagesResponseData} from '~/types/dalle3'
 
 const config = useRuntimeConfig();
 
@@ -9,23 +10,18 @@ const key = config.dalle3ApiKey; // Azure OpenAI DALL-E v3 API Key
 const api_version = '2023-12-01-preview';
 const apiUrl = `${endpoint}openai/deployments/Dalle3/images/generations?api-version=${api_version}`;
 
-interface GenerateImagesResponse  {
-    created: number;
-    data: GenerateImagesResponseData[];
-}
-interface GenerateImagesResponseData {
-    url: string;
-    revised_prompt: string;
-}
+
 
 export default defineEventHandler(async (event) => {
     try {
-        const query = await getQuery(event);
-        const text = query.text as string | undefined;
-        if (!text) {
-          throw createError({ statusCode: 400, statusMessage: 'No text provided' });
+        // リクエストボディを取得
+        const body = await readBody(event);
+        // ボディからデータを取り出す
+        const { prompt } = body;
+
+        if(!prompt){
+            throw createError({ statusCode: 400, statusMessage: 'Parameter Error' });
         }
-        console.log(`url: ${apiUrl}`);
 
         const response = await fetch(apiUrl,{
             method: 'POST',
@@ -34,7 +30,7 @@ export default defineEventHandler(async (event) => {
                 'api-key': key,
             },
             body: JSON.stringify({
-                prompt: text,
+                prompt: prompt,
                 size: "1024x1024",
                 n: 1,
                 quality: "standard",
@@ -49,11 +45,9 @@ export default defineEventHandler(async (event) => {
         const url = result.data[0].url;
         const revised_prompt = result.data[0].revised_prompt;
 
-        return {
-            url,
-            revised_prompt,
-        };
+        console.log(`url: ${url}, revised_prompt: ${revised_prompt}`);
 
+        return url;
     } catch (error) {
         console.error(error);
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error' });

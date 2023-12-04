@@ -1,6 +1,6 @@
 import { defineEventHandler, sendError, createError } from 'h3'
 import { MongoClient } from 'mongodb';
-import { Room } from '~/types/room';
+import { Game } from '~/types/game';
 
 const config = useRuntimeConfig();
 const uri = config.mongoConnection;
@@ -17,17 +17,17 @@ export default defineEventHandler(async (event) => {
     }
 
     // Room存在チェック
-    const room = await checkIfRoomExists(gameId);
-    if (!room) {
+    const games = await checkIfRoomExists(gameId);
+    if (!games) {
         throw createError({ statusCode: 400, statusMessage: 'Game Not Found' });
     }
 
     // Game情報を返す
-    return room;
+    return games;
 })
 
 // Roomの存在をチェックする関数 (仮の実装)
-async function checkIfRoomExists(gameId: string): Promise<Room> {
+async function checkIfRoomExists(gameId: string): Promise<Game[]> {
     try{
         // MongoDB に接続
         await client.connect();
@@ -37,9 +37,9 @@ async function checkIfRoomExists(gameId: string): Promise<Room> {
         const db = client.db(dbName);
 
         // DBからgameIdをキーにしてRoomを取得
-        const collection = db.collection('rooms');
-        const room = await collection.findOne({ roomId: gameId });
-        return room;
+        const collection = db.collection('games');
+        const games = await collection.find({ roomId: gameId }).sort({ similarity: -1 }).limit(10).toArray();
+        return games;
     }catch(err){
         console.error(err);
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error' });

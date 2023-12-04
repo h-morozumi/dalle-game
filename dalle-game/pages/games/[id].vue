@@ -9,8 +9,8 @@
         <Placeholder class="h-8" />
         <div class="border-inherit">
           <div class="text-right"><UButton icon="i-heroicons-clipboard-document" color="gray" @click="copyToClipboard">Game URLをコピー</UButton></div>
-          <div class="text-2xl text-center">ゲームルーム</div>
-          <div class="text-center">ゲームルームのURLを共有して、友達を招待しよう！</div>
+          <div class="text-2xl text-center">画像生成ゲーム</div>
+          <div class="text-center">ゲームのURLを共有して、友達を招待しよう！</div>
         </div>
       </template>
       <div class="border-inherit">
@@ -25,6 +25,7 @@
           <div class="col-span-full text-center">
             <UButton class="m-2" @click="fixTitle" :disabled="titleFixed || roomClosed || titleImg ==='' || block">お題を確定</UButton>
             <UButton class="m-2" @click="finishGame" :disabled="!titleFixed || roomClosed || block" >ゲーム終了</UButton>
+            <UButton class="m-2" @click="refresh">最新の情報に更新</UButton>
             <UButton class="m-2" @click="result" :disabled="!roomClosed || block">結果を表示</UButton>
           </div>
         </div>
@@ -66,6 +67,7 @@
           </div>
           <div class="col-span-1">
             <div class="text-center">
+              <URadioGroup v-model="selected" legend="Choose something" :options="options" />
               <UButton class="m-2" @click="createImage" :disabled="roomClosed || !titleFixed || prompt === '' || block">画像を生成</UButton>
               <UButton class="m-2" @click="clear" :disabled="roomClosed || !titleFixed || block">クリア</UButton>
             </div>
@@ -97,7 +99,14 @@ const prompt = ref<string>(''); // プロンプト
 const genImage = ref<string>(''); // 生成された画像
 const nickname = ref<string>(''); // ニックネーム
 const block = ref<boolean>(false); // ブロック
-
+const options = [{
+    value: 'v2',
+    label: 'DALL-E v2'
+  }, {
+    value: 'v3',
+    label: 'DALL-E v3'
+  }]
+const selected = ref('v2')
 // 現在のページの完全なURLを取得
 const currentUrl = computed(() => {
   return window.location.origin + route.fullPath;
@@ -202,7 +211,7 @@ const createImage = async () => {
   if(!prompt.value) return;
   block.value = true;
   // /api/dalle/v2/gen にPOSTリクエストを送信
-  const { data, error } = await useFetch(`/api/dalle/v2/gen`, {
+  const { data, error } = await useFetch(`/api/dalle/${selected.value}/gen`, {
     method: 'POST',
     body: JSON.stringify({
       prompt: prompt.value,
@@ -231,12 +240,45 @@ const clear = async () => {
 
 // 生成画像を共有
 const shareImage = async () => {
+  if(!genImage.value) return;
+  block.value = true;
+
+  // 生成した画像とプロンプトを登録する
+  const { data, error } = await useFetch(`/api/games/image`, {
+    method: 'POST',
+    body: JSON.stringify({
+      roomId: id,
+      nickname: nickname.value || 'no name',
+      prompt: prompt.value,
+      image: genImage.value,
+      dalle: selected.value === 'v2' ? 'DALL-E 2' : 'DALL-E 3',
+    }),
+  });
+  if(error.value) {
+    console.error(error.value);
+  }
+
   genImage.value = '';
   prompt.value = '';
+  block.value = false;
 }
 
+const refresh = async () => {
+  // Gameの内容を取得
+  const { data, error } = await useFetch(`/api/games/${id}`);
+  if (error.value) {
+    console.error(error.value);
+    isGameNotFound.value = true;
+    return;
+  }
+  const room = data.value as import('~/types/room').Room;
+  imageUrl.value = room.titleUrl || '';
+  titleImg.value = room.titleImage || '';
+  titleFixed.value = room.titleFixed;
+  roomClosed.value = room.roomClosed;
+}
 
-
+// 結果を表示
 const result = async () => {
   navigateTo('/result/' + id);
 }
