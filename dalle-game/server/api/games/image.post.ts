@@ -66,8 +66,6 @@ export default defineEventHandler(async (event) => {
             similarity: cosineSimilarity,
             dalle: dalle
          };
-         console.log(game);
-         
          const result = await collection.insertOne(game);
          console.log(`New game created with the following id: ${result.insertedId}`);
 

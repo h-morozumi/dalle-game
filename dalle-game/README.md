@@ -79,4 +79,7 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 ```
 docker build -t dalle-game .
 docker run -p 3000:3000 dalle-game
+
+docker build -t dalle-game:v1 .
+docker run --env-file ./.env -p 3000:3000 dalle-game:v1
 ```

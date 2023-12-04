@@ -31,7 +31,7 @@
         </div>
       </div>
       <div class="bg-slate-20 my-3">
-        <div class="grid grid-cols-3 min-hight-200">
+        <div class="grid grid-cols-3 min-hight-256">
           <div class="col-span-1">
             <div class="text-center font-medium">お題の画像</div>
             <div v-if="titleImg !== ''">
@@ -45,7 +45,7 @@
             <div class="text-center">
               <div class="text-center font-medium">生成された画像</div>
               <div v-if="genImage !== ''">
-                <img class="m-auto" :src="genImage" />
+                <img class="m-auto max-height-256" :src="genImage" />
               </div>
               <div v-else>
                 <img class="m-auto opacity-25" src="/noimage.png" width="256" height="256" />
@@ -67,7 +67,7 @@
           </div>
           <div class="col-span-1">
             <div class="text-center">
-              <URadioGroup v-model="selected" legend="Choose something" :options="options" />
+              <URadioGroup class="m-auto" v-model="selected" legend="Choose version" :options="options" />
               <UButton class="m-2" @click="createImage" :disabled="roomClosed || !titleFixed || prompt === '' || block">画像を生成</UButton>
               <UButton class="m-2" @click="clear" :disabled="roomClosed || !titleFixed || block">クリア</UButton>
             </div>

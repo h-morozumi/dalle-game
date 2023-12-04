@@ -27,7 +27,7 @@
               <th class="border border-slate-300 bg-slate-200">類似度</th>
               <th class="border border-slate-300 bg-slate-200">画像</th>
               <th class="border border-slate-300 bg-slate-200">DALL-E</th>
-              <th class="border border-slate-300 bg-slate-200">プロンプト</th>
+              <th class="border border-slate-300 bg-slate-200" width="50%">プロンプト</th>
             </tr>
           </thead>
           <tbody>
