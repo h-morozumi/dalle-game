@@ -10,6 +10,8 @@
     <br />
     <input type="button" value="execute" @click="execute" />
     <br />
+    <hr />
+    
 </template>
 <script lang="ts" setup>
 const { data, pending, error, refresh, execute } = await useAsyncData(
